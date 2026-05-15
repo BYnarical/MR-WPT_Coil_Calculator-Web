@@ -1,9 +1,31 @@
 // CoilCalc web renderer — Pyodide backend.
+
+// ----------------------------------------------------------- ferrite schemas
+const FERRITE_FIELDS = {
+  none:    [],
+  sheet:   [['thickness_mm','Thickness (mm)',1.5,0.1], ['area_mm2','Area (mm², 0 = match coil)',0,1], ['gap_mm','Gap coil→plate (mm)',0.5,0.1]],
+  rod:     [['length_mm','Length (mm)',50,1], ['diameter_mm','Diameter (mm)',10,0.5]],
+  bars:    [['n_bars','Number of bars',4,1], ['length_mm','Bar length (mm)',100,1], ['width_mm','Bar width (mm)',25,1], ['thickness_mm','Bar thickness (mm)',5,0.5], ['spacing_mm','Spacing (mm)',5,1]],
+  potcore: [['OD_mm','Outer Ø (mm)',40,1], ['ID_mm','Inner Ø (mm)',15,1], ['height_mm','Height (mm)',12,0.5], ['air_gap_mm','Air gap (mm)',0.5,0.1]],
+  ring:    [['OD_mm','Outer Ø (mm)',30,1], ['ID_mm','Inner Ø (mm)',20,1], ['height_mm','Height (mm)',10,0.5], ['air_gap_mm','Air gap (mm)',0.0,0.05]],
+  custom:  [['l_mult_at_dc','L gain × at DC',2.0,0.1], ['rolloff_f','μ_r rolloff f (Hz)',1e6,1000], ['core_volume','Core volume (m³)',1e-6,1e-9], ['eff_path','Effective path (m)',0.05,0.005]],
+};
+const FERRITE_CUSTOM_MAT_FIELDS = [
+  ['mu_r0','μ_r at DC',2000,1],
+  ['f_cutoff','μ_r cutoff f (Hz)',1e6,1000],
+  ['Bsat_T','B_sat (T)',0.4,0.01],
+  ['rho','ρ (Ω·m)',5.0,0.1],
+  ['k_sm','Steinmetz k',1.8e-3,1e-5],
+  ['alpha_sm','Steinmetz α',1.5,0.05],
+  ['beta_sm','Steinmetz β',2.6,0.05],
+];
+let FERRITE_PRESETS_CACHE = null;
+
 // Mirrors electron/renderer/app.js but routes compute() through the Pyodide
 // bridge instead of Electron IPC.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { init as initPyodide, compute as pyCompute } from './pyodide-bridge.js?v=3';
+import { init as initPyodide, compute as pyCompute } from './pyodide-bridge.js?v=4';
 
 // ----------------------------------------------------------- theme
 const COL = {
@@ -47,6 +69,8 @@ async function callApi(method, params) {
     return null;
   }
 }
+// Make the bridge reachable from helpers that don't see this module's scope.
+window.coilcalcCompute = pyCompute;
 
 // ----------------------------------------------------------- schema
 const GEOM_FIELDS = {
@@ -104,6 +128,96 @@ function buildForm(container, schema, kind, onChange) {
 }
 function populateSelect(sel, options) {
   sel.innerHTML = options.map((o) => `<option value="${o[0]}">${o[1]}</option>`).join('');
+}
+
+/**
+ * buildFerriteForm — manages ferrite shape + material selectors.
+ * shapeSel: <select> for kind
+ * matSel:   <select> for material name (populated from presets + 'custom')
+ * container:<div>   for the dynamic per-shape and per-material number fields
+ *
+ * Returns { get(): {kind, material, ...params}, refresh() } —
+ * get() returns null if kind === 'none'.
+ */
+function buildFerriteForm(shapeSel, matSel, container, onChange) {
+  const values = { params: {}, customMat: {} };
+
+  async function fetchPresets() {
+    if (FERRITE_PRESETS_CACHE) return FERRITE_PRESETS_CACHE;
+    try {
+      FERRITE_PRESETS_CACHE = await window.coilcalcCompute('ferrite_presets', {});
+      return FERRITE_PRESETS_CACHE;
+    } catch (_e) { return { materials: [] }; }
+  }
+
+  function render() {
+    container.innerHTML = '';
+    const kind = shapeSel.value;
+    if (kind === 'none') {
+      matSel.parentElement.style.display = 'none';
+      return;
+    }
+    matSel.parentElement.style.display = '';
+    // per-shape fields
+    (FERRITE_FIELDS[kind] || []).forEach(([key, label, def, step]) => {
+      values.params[key] = def;
+      const row = document.createElement('div');
+      row.className = 'field';
+      row.innerHTML = `<label>${label}</label><input type="number" step="${step}" value="${def}">`;
+      row.querySelector('input').addEventListener('input', (e) => {
+        const v = parseFloat(e.target.value);
+        if (Number.isFinite(v)) { values.params[key] = v; onChange(); }
+      });
+      container.appendChild(row);
+    });
+    // custom material params (when material === 'custom')
+    if (matSel.value === 'custom') {
+      const hdr = document.createElement('div');
+      hdr.className = 'fineprint';
+      hdr.style.marginTop = '8px';
+      hdr.textContent = 'Custom material parameters:';
+      container.appendChild(hdr);
+      FERRITE_CUSTOM_MAT_FIELDS.forEach(([key, label, def, step]) => {
+        values.customMat[key] = values.customMat[key] ?? def;
+        const row = document.createElement('div');
+        row.className = 'field';
+        row.innerHTML = `<label>${label}</label><input type="number" step="${step}" value="${values.customMat[key]}">`;
+        row.querySelector('input').addEventListener('input', (e) => {
+          const v = parseFloat(e.target.value);
+          if (Number.isFinite(v)) { values.customMat[key] = v; onChange(); }
+        });
+        container.appendChild(row);
+      });
+    }
+  }
+
+  // Populate material dropdown when presets arrive
+  fetchPresets().then((p) => {
+    const cur = matSel.value;
+    matSel.innerHTML = '<option value="custom">Custom (set params below)</option>'
+      + (p.materials || []).map((m) => `<option value="${m.name}">${m.name}</option>`).join('');
+    if (cur) matSel.value = cur;
+    render();
+  });
+
+  shapeSel.addEventListener('change', () => { render(); onChange(); });
+  matSel.addEventListener('change',   () => { render(); onChange(); });
+  render();
+
+  return {
+    get() {
+      const kind = shapeSel.value;
+      if (kind === 'none') return null;
+      const out = { kind, ...values.params };
+      const matName = matSel.value;
+      if (matName === 'custom') {
+        out.material = { name: 'Custom', family: 'MnZn', ...values.customMat };
+      } else {
+        out.material = matName;
+      }
+      return out;
+    },
+  };
 }
 function debounce(fn, ms = 200) {
   let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
@@ -228,7 +342,7 @@ const PANEL_INIT_HOOKS = [];
   const condSel = document.getElementById('s-cond-kind');
   populateSelect(geomSel, GEOM_OPTS);
   populateSelect(condSel, COND_OPTS);
-  const refresh = debounce(run, 120);
+  const refresh = debounce(run, 200);
   const geomForm = buildForm(document.getElementById('s-geom-fields'),
                              GEOM_FIELDS, 'circular', refresh);
   const condForm = buildForm(document.getElementById('s-cond-fields'),
@@ -237,14 +351,23 @@ const PANEL_INIT_HOOKS = [];
   condSel.addEventListener('change', () => condForm.setKind(condSel.value));
   document.getElementById('s-freq').addEventListener('input', refresh);
 
+  // Ferrite form
+  const ferrShape = document.getElementById('s-ferr-kind');
+  const ferrMat   = document.getElementById('s-ferr-mat');
+  const ferrFields = document.getElementById('s-ferr-fields');
+  const ferrForm = buildFerriteForm(ferrShape, ferrMat, ferrFields, refresh);
+
   const scene = makeThreeScene(document.getElementById('s-canvas'));
 
   async function run() {
     if (!pyReady) return;
     const geom = { kind: geomSel.value, ...geomForm.get() };
     const cond = { kind: condSel.value, ...condForm.get() };
+    const ferrite = ferrForm.get();   // may be null
     const f = parseFloat(document.getElementById('s-freq').value) * 1e6;
-    const r = await callApi('single_coil', { geom, conductor: cond, f });
+    const params = { geom, conductor: cond, f };
+    if (ferrite) params.ferrite = ferrite;
+    const r = await callApi('single_coil', params);
     if (!r) return;
     document.getElementById('s-L').textContent   = r.L_uH.toFixed(3) + '  µH';
     document.getElementById('s-Rdc').textContent = r.Rdc_mOhm.toFixed(3) + '  mΩ';
@@ -254,6 +377,17 @@ const PANEL_INIT_HOOKS = [];
       ? r.SRF_MHz.toFixed(2) + '  MHz' : '—';
     document.getElementById('s-len').textContent = r.wire_length_m.toFixed(3) + '  m';
     scene.setPaths([r.path]);
+
+    const ferrPanel = document.getElementById('s-ferr-results');
+    if (r.ferrite) {
+      ferrPanel.style.display = '';
+      document.getElementById('s-ferr-name').textContent  = r.ferrite.material;
+      document.getElementById('s-ferr-mur').textContent   = r.ferrite.mu_r_at_f.toFixed(1);
+      document.getElementById('s-ferr-lmult').textContent = '× ' + r.ferrite.L_mult_total.toFixed(2);
+      document.getElementById('s-ferr-coreR').textContent = r.ferrite.core_loss_R_mOhm.toFixed(3) + '  mΩ';
+    } else {
+      ferrPanel.style.display = 'none';
+    }
   }
   PANEL_INIT_HOOKS.push(run);
 })();

@@ -80,6 +80,25 @@
       </div>
       <div id="s-cond-fields"></div>
 
+      <h3 style="margin-top:18px">Ferrite</h3>
+      <div class="field"><label>Shape</label>
+        <select id="s-ferr-kind">
+          <option value="none">None (air-core)</option>
+          <option value="sheet">Sheet / backplate</option>
+          <option value="rod">Rod (axial core)</option>
+          <option value="bars">Bars (EV-pad style)</option>
+          <option value="potcore">Pot core (cup)</option>
+          <option value="ring">Ring / toroid</option>
+          <option value="custom">Custom (raw L multiplier)</option>
+        </select>
+      </div>
+      <div class="field"><label>Material</label>
+        <select id="s-ferr-mat">
+          <option value="custom">Custom (set params below)</option>
+        </select>
+      </div>
+      <div id="s-ferr-fields"></div>
+
       <h3 style="margin-top:18px">Frequency</h3>
       <div class="field"><label>f (MHz)</label>
         <input id="s-freq" type="number" value="6.78" min="0.001" step="0.01" />
@@ -95,6 +114,15 @@
         <div class="metric-key">Q</div>           <div class="metric-val" id="s-Q">—</div>
         <div class="metric-key">SRF</div>         <div class="metric-val" id="s-SRF">—</div>
         <div class="metric-key">Wire length</div> <div class="metric-val" id="s-len">—</div>
+      </div>
+      <div id="s-ferr-results" style="display:none; margin-top:14px">
+        <h3 style="margin-top:6px">Ferrite effect</h3>
+        <div class="metric-grid">
+          <div class="metric-key">Material</div>         <div class="metric-val" id="s-ferr-name">—</div>
+          <div class="metric-key">μ_r @ f</div>            <div class="metric-val" id="s-ferr-mur">—</div>
+          <div class="metric-key">L gain ×</div>           <div class="metric-val" id="s-ferr-lmult">—</div>
+          <div class="metric-key">Core-loss R_ac</div>     <div class="metric-val" id="s-ferr-coreR">—</div>
+        </div>
       </div>
       <p class="fineprint">
         Planar spiral → <b>Mohan</b><br>
@@ -241,6 +269,6 @@
   }
 }
 </script>
-<script type="module" src="./app.js?v=9"></script>
+<script type="module" src="./app.js?v=11"></script>
 </body>
 </html>
