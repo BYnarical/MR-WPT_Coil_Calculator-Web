@@ -61,6 +61,7 @@
   <button class="tab active" data-tab="single"><span class="material-icons">circle</span>Single coil</button>
   <button class="tab"        data-tab="pair"><span class="material-icons">link</span>Pair / coupling</button>
   <button class="tab"        data-tab="system"><span class="material-icons">hub</span>System (N-coil)</button>
+  <button class="tab"        data-tab="settings"><span class="material-icons">tune</span>Settings</button>
   <button class="tab"        data-tab="about"><span class="material-icons">info</span>About</button>
 </nav>
 
@@ -100,8 +101,8 @@
       <div id="s-ferr-fields"></div>
 
       <h3 style="margin-top:18px">Frequency</h3>
-      <div class="field"><label>f (MHz)</label>
-        <input id="s-freq" type="number" value="6.78" min="0.001" step="0.01" />
+      <div class="field"><label id="s-freq-label">f</label>
+        <input id="s-freq" type="number" placeholder="—" step="0.01" />
       </div>
     </section>
 
@@ -158,12 +159,12 @@
 
     <section class="card metrics-card">
       <h3>Alignment &amp; system</h3>
-      <div class="field"><label>Gap (mm)</label><input id="p-gap" type="number" value="20" step="1"></div>
-      <div class="field"><label>Lateral (mm)</label><input id="p-lat" type="number" value="0" step="1"></div>
-      <div class="field"><label>Tilt (deg)</label><input id="p-tilt" type="number" value="0" step="1"></div>
-      <div class="field"><label>R_load (Ω)</label><input id="p-rload" type="number" value="20" step="1"></div>
-      <div class="field"><label>V_source (V)</label><input id="p-vsource" type="number" value="10" step="0.5"></div>
-      <div class="field"><label>f (MHz)</label><input id="p-freq" type="number" value="6.78" step="0.01"></div>
+      <div class="field"><label id="p-gap-label">Gap</label><input id="p-gap" type="number" placeholder="—" step="1"></div>
+      <div class="field"><label id="p-lat-label">Lateral</label><input id="p-lat" type="number" placeholder="—" step="1"></div>
+      <div class="field"><label>Tilt (deg)</label><input id="p-tilt" type="number" placeholder="—" step="1"></div>
+      <div class="field"><label>R_load (Ω)</label><input id="p-rload" type="number" placeholder="—" step="1"></div>
+      <div class="field"><label>V_source (V)</label><input id="p-vsource" type="number" placeholder="—" step="0.5"></div>
+      <div class="field"><label id="p-freq-label">f</label><input id="p-freq" type="number" placeholder="—" step="0.01"></div>
 
       <h3 style="margin-top:18px">Coupling &amp; link</h3>
       <div class="metric-grid">
@@ -206,9 +207,9 @@
         <tbody id="sys-rows"></tbody>
       </table>
       <h3 style="margin-top:18px">System</h3>
-      <div class="field"><label>f (MHz)</label><input id="sys-freq" type="number" value="6.78" step="0.01"></div>
-      <div class="field"><label>R_load (Ω)</label><input id="sys-rload" type="number" value="20" step="1"></div>
-      <div class="field"><label>V_source (V)</label><input id="sys-vsource" type="number" value="10" step="0.5"></div>
+      <div class="field"><label id="sys-freq-label">f</label><input id="sys-freq" type="number" placeholder="—" step="0.01"></div>
+      <div class="field"><label>R_load (Ω)</label><input id="sys-rload" type="number" placeholder="—" step="1"></div>
+      <div class="field"><label>V_source (V)</label><input id="sys-vsource" type="number" placeholder="—" step="0.5"></div>
       <div class="metric-grid" style="margin-top:14px">
         <div class="metric-key">η</div>     <div class="metric-val" id="sys-eta">—</div>
         <div class="metric-key">V_out</div> <div class="metric-val" id="sys-vout">—</div>
@@ -224,6 +225,55 @@
       <div id="sys-heatmap" class="heatmap-wrap"></div>
     </section>
   </div>
+</main>
+
+<!-- ===================================================== SETTINGS -->
+<main id="tab-settings" class="tab-panel">
+  <section class="card" style="max-width:760px; margin:0 auto">
+    <h2 style="color:var(--primary);">Settings</h2>
+    <p class="fineprint" style="font-size:13px; color:#cbd5e1">
+      Pick the units you want to enter and read values in. Choices persist in
+      your browser (LocalStorage) and apply across every tab.
+    </p>
+
+    <h3 style="margin-top:18px">Input units</h3>
+    <div class="field"><label>Frequency</label>
+      <select id="set-freq-unit">
+        <option>Hz</option><option>kHz</option><option>MHz</option><option>GHz</option>
+      </select>
+    </div>
+    <div class="field"><label>Length (geometry inputs)</label>
+      <select id="set-length-unit">
+        <option>mm</option><option>cm</option><option>m</option><option>in</option>
+      </select>
+    </div>
+
+    <h3 style="margin-top:18px">Display units</h3>
+    <div class="field"><label>Inductance (L, M)</label>
+      <select id="set-L-unit">
+        <option>nH</option><option>µH</option><option>mH</option><option>H</option>
+      </select>
+    </div>
+    <div class="field"><label>Resistance (R_ac, core loss)</label>
+      <select id="set-R-unit">
+        <option>µΩ</option><option>mΩ</option><option>Ω</option><option>kΩ</option>
+      </select>
+    </div>
+    <div class="field"><label>Power (P_in, P_load)</label>
+      <select id="set-P-unit">
+        <option>µW</option><option>mW</option><option>W</option><option>kW</option>
+      </select>
+    </div>
+
+    <p class="fineprint" style="margin-top:20px; color:#64748b">
+      Inputs you've entered are kept; switching unit only changes the
+      displayed quantity (and the unit suffix on each label). All numbers
+      are computed in SI internally.
+    </p>
+    <div style="margin-top:16px">
+      <button id="set-reset" class="btn danger">Reset to defaults</button>
+    </div>
+  </section>
 </main>
 
 <!-- ===================================================== ABOUT -->
@@ -269,6 +319,6 @@
   }
 }
 </script>
-<script type="module" src="./app.js?v=12"></script>
+<script type="module" src="./app.js?v=16"></script>
 </body>
 </html>
