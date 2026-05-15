@@ -1,4 +1,4 @@
-// Pyodide bridge — loads CPython + NumPy + SciPy + coilcalc wheel in the
+// Pyodide bridge — loads CPython + NumPy + SciPy + CoilCalc wheel in the
 // browser. Exposes a single async compute(method, params) function that the
 // renderer uses exactly like the Electron preload's window.api.compute.
 
@@ -27,7 +27,7 @@ export async function init(onProgress = () => {}) {
     await py.loadPackage(['numpy', 'scipy', 'micropip']);
 
     onProgress({ step: 'wheel',
-                 msg: 'Installing coilcalc wheel…' });
+                 msg: 'Installing CoilCalc wheel…' });
     const micropip = py.pyimport('micropip');
     // The wheel sits next to this file (same dir on the static server).
     const wheelUrl = new URL('./coilcalc-0.6.0-py3-none-any.whl',
@@ -49,7 +49,7 @@ from coilcalc import __version__ as _coilcalc_version
 }
 
 /**
- * compute(method, params) — call a coilcalc.web_api method.
+ * compute(method, params) — call a CoilCalc web_api method (Python: coilcalc.web_api).
  * Mirrors the Electron `window.api.compute` signature exactly so app.js can
  * be reused with only the import line differing.
  */

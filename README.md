@@ -10,14 +10,20 @@ data leaves your machine.
 
 ## What is this?
 
-A pre-built, runnable snapshot of [CoilCalc](https://github.com/BYnarical/MR-WPT_Coil_Calculator).
-The Python physics core is shipped as a pure-Python wheel and executed
-inside the page by [Pyodide](https://pyodide.org) (CPython compiled to
-WebAssembly). First visit downloads ~30 MB; subsequent visits load
-instantly from your browser's cache.
+A pre-built, runnable snapshot of **CoilCalc**
+([source](https://github.com/BYnarical/MR-WPT_Coil_Calculator)).
+The Python physics core (module: `coilcalc`) is shipped as a pure-Python
+wheel and executed inside the page by
+[Pyodide](https://pyodide.org) (CPython compiled to WebAssembly). First
+visit downloads ~30 MB; subsequent visits load instantly from your
+browser's cache.
 
-**This repository is the runnable site only. For the full source code,
-tests, desktop builds, and Electron build, see
+> The brand name is **CoilCalc**. The underlying Python module is
+> `coilcalc` (lowercase, per Python's PEP 8 / PEP 503 — required for `pip
+> install` to work).
+
+**This repository contains only the runnable site. For the full Python
+source, tests, desktop builds, and Electron app, see
 [BYnarical/MR-WPT_Coil_Calculator](https://github.com/BYnarical/MR-WPT_Coil_Calculator).**
 
 ## Live site
@@ -45,7 +51,7 @@ that allows local module imports.
 | `style.css`                | 6.5 KB | Material-style dark theme |
 | `app.js`                   | 19 KB | Tab logic + Three.js (3-D coil view) + Chart.js (sweep plots) |
 | `pyodide-bridge.js`        | 2.8 KB | Loads Pyodide CDN, installs the wheel, exposes `compute(method, params)` |
-| `coilcalc-0.6.0-py3-none-any.whl` | 67 KB | The Python physics package |
+| `coilcalc-0.6.0-py3-none-any.whl` | 67 KB | The CoilCalc physics package (Python module `coilcalc`) |
 
 ## Tabs
 

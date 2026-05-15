@@ -1,9 +1,9 @@
-// coilcalc web renderer — Pyodide backend.
+// CoilCalc web renderer — Pyodide backend.
 // Mirrors electron/renderer/app.js but routes compute() through the Pyodide
 // bridge instead of Electron IPC.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { init as initPyodide, compute as pyCompute } from './pyodide-bridge.js?v=2';
+import { init as initPyodide, compute as pyCompute } from './pyodide-bridge.js?v=3';
 
 // ----------------------------------------------------------- theme
 const COL = {
@@ -211,7 +211,7 @@ const PANEL_INIT_HOOKS = [];
     });
     // Defer one tick so all IIFE setups have finished registering their hooks.
     await new Promise((r) => setTimeout(r, 0));
-    console.log('[coilcalc] firing', PANEL_INIT_HOOKS.length, 'panel hooks');
+    console.log('[CoilCalc] firing', PANEL_INIT_HOOKS.length, 'panel hooks');
     for (const h of PANEL_INIT_HOOKS) {
       try { await h(); }
       catch (e) { console.error('panel hook failed:', e); }
