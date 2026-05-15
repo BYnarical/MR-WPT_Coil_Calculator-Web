@@ -30,7 +30,7 @@ export async function init(onProgress = () => {}) {
                  msg: 'Installing CoilCalc wheel…' });
     const micropip = py.pyimport('micropip');
     // The wheel sits next to this file (same dir on the static server).
-    const wheelUrl = new URL('./coilcalc-0.8.0-py3-none-any.whl',
+    const wheelUrl = new URL('./coilcalc-0.8.1-py3-none-any.whl',
                              import.meta.url).href;
     await micropip.install(wheelUrl);
 

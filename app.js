@@ -76,7 +76,7 @@ let FERRITE_PRESETS_CACHE = null;
 // bridge instead of Electron IPC.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { init as initPyodide, compute as pyCompute } from './pyodide-bridge.js?v=6';
+import { init as initPyodide, compute as pyCompute } from './pyodide-bridge.js?v=7';
 
 // ----------------------------------------------------------- theme
 const COL = {
@@ -129,16 +129,19 @@ window.coilcalcCompute = pyCompute;
 //        'um'  → fixed µm input
 //        'mm'  → fixed mm input (precision-sensitive items like pitch)
 //        'cnt' → unitless count / turns
+// Geometry fields. The conductor's track width (`w`) is *not* asked here —
+// it's auto-derived on the API side from the chosen conductor (round-wire d /
+// Litz bundle / foil or PCB-trace width). Same for solenoid/conical wire-Ø.
 const GEOM_FIELDS = {
-  circular:    [['N','Turns',1,'cnt'], ['Do','Outer Ø',1,'L'], ['Di','Inner Ø',1,'L'], ['w','Conductor w',0.1,'L'], ['s','Turn gap s',0.1,'L']],
-  square:      [['N','Turns',1,'cnt'], ['Do','Outer Ø',1,'L'], ['Di','Inner Ø',1,'L'], ['w','Conductor w',0.1,'L'], ['s','Turn gap s',0.1,'L']],
-  hexagonal:   [['N','Turns',1,'cnt'], ['Do','Outer Ø',1,'L'], ['Di','Inner Ø',1,'L'], ['w','Conductor w',0.1,'L'], ['s','Turn gap s',0.1,'L']],
-  octagonal:   [['N','Turns',1,'cnt'], ['Do','Outer Ø',1,'L'], ['Di','Inner Ø',1,'L'], ['w','Conductor w',0.1,'L'], ['s','Turn gap s',0.1,'L']],
-  rectangular: [['N','Turns',1,'cnt'], ['a','Outer a',1,'L'], ['b','Outer b',1,'L'], ['Di_a','Inner a',1,'L'], ['Di_b','Inner b',1,'L'], ['w','Conductor w',0.1,'L'], ['s','Turn gap s',0.1,'L']],
-  solenoid:    [['N','Turns',1,'cnt'], ['D','Diameter D',1,'L'], ['length','Length',1,'L'], ['w','Wire Ø',0.1,'L']],
-  conical:     [['N','Turns',1,'cnt'], ['r_top','Top r',1,'L'], ['r_bot','Bottom r',1,'L'], ['length','Length',1,'L'], ['w','Wire Ø',0.1,'L']],
-  multilayer:  [['N','Turns/layer',1,'cnt'], ['Do','Outer Ø',1,'L'], ['Di','Inner Ø',1,'L'], ['n_layers','Layers',1,'cnt'], ['layer_spacing','Layer spacing',0.1,'L'], ['w','Conductor w',0.1,'L'], ['s','Turn gap s',0.1,'L']],
-  DD:          [['N','Turns/D',1,'cnt'], ['a','Outer a',1,'L'], ['b','Outer b',1,'L'], ['Di_a','Inner a',1,'L'], ['Di_b','Inner b',1,'L'], ['gap_between','D-gap',1,'L'], ['w','Conductor w',0.1,'L'], ['s','Turn gap s',0.1,'L']],
+  circular:    [['N','Turns',1,'cnt'], ['Do','Outer Ø',1,'L'], ['Di','Inner Ø',1,'L'], ['s','Turn gap s',0.1,'L']],
+  square:      [['N','Turns',1,'cnt'], ['Do','Outer Ø',1,'L'], ['Di','Inner Ø',1,'L'], ['s','Turn gap s',0.1,'L']],
+  hexagonal:   [['N','Turns',1,'cnt'], ['Do','Outer Ø',1,'L'], ['Di','Inner Ø',1,'L'], ['s','Turn gap s',0.1,'L']],
+  octagonal:   [['N','Turns',1,'cnt'], ['Do','Outer Ø',1,'L'], ['Di','Inner Ø',1,'L'], ['s','Turn gap s',0.1,'L']],
+  rectangular: [['N','Turns',1,'cnt'], ['a','Outer a',1,'L'], ['b','Outer b',1,'L'], ['Di_a','Inner a',1,'L'], ['Di_b','Inner b',1,'L'], ['s','Turn gap s',0.1,'L']],
+  solenoid:    [['N','Turns',1,'cnt'], ['D','Diameter D',1,'L'], ['length','Length',1,'L']],
+  conical:     [['N','Turns',1,'cnt'], ['r_top','Top r',1,'L'], ['r_bot','Bottom r',1,'L'], ['length','Length',1,'L']],
+  multilayer:  [['N','Turns/layer',1,'cnt'], ['Do','Outer Ø',1,'L'], ['Di','Inner Ø',1,'L'], ['n_layers','Layers',1,'cnt'], ['layer_spacing','Layer spacing',0.1,'L'], ['s','Turn gap s',0.1,'L']],
+  DD:          [['N','Turns/D',1,'cnt'], ['a','Outer a',1,'L'], ['b','Outer b',1,'L'], ['Di_a','Inner a',1,'L'], ['Di_b','Inner b',1,'L'], ['gap_between','D-gap',1,'L'], ['s','Turn gap s',0.1,'L']],
 };
 const COND_FIELDS = {
   litz:  [['strand_d','Strand Ø',1,'um'], ['n_strands','# strands',1,'cnt']],
