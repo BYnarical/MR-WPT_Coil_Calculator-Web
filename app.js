@@ -25,7 +25,7 @@ let FERRITE_PRESETS_CACHE = null;
 // bridge instead of Electron IPC.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { init as initPyodide, compute as pyCompute } from './pyodide-bridge.js?v=4';
+import { init as initPyodide, compute as pyCompute } from './pyodide-bridge.js?v=5';
 
 // ----------------------------------------------------------- theme
 const COL = {
